@@ -1,5 +1,7 @@
 #include "Autopilot.h"
+#include "../GPS/GPS.h"
 #include <math.h>
+#include <time.h>
 
 void Autopilot::setSteering(float ammt) {
 	CONTROLS::_SET_CONTROL_NORMAL(27, 59, ammt); //[-1,1]
@@ -11,28 +13,42 @@ void Autopilot::setBrake(float ammt){
 	CONTROLS::_SET_CONTROL_NORMAL(27, 72, ammt); //[0,1];
 }
 
+Autopilot::Autopilot()
+{
+	AUDIO::PLAY_SOUND_FRONTEND(-1, "NAV_UP_DOWN", "HUD_FRONTEND_DEFAULT_SOUNDSET", 0);
+	AUDIO::PLAY_SOUND_FRONTEND(-1, "NAV_UP_DOWN", "HUD_FRONTEND_DEFAULT_SOUNDSET", 0);
+	AUDIO::PLAY_SOUND_FRONTEND(-1, "NAV_UP_DOWN", "HUD_FRONTEND_DEFAULT_SOUNDSET", 0);
+	nav = GPS();
+	AUDIO::PLAY_SOUND_FRONTEND(-1, "NAV_UP_DOWN", "HUD_FRONTEND_DEFAULT_SOUNDSET", 0);
+	AUDIO::PLAY_SOUND_FRONTEND(-1, "NAV_UP_DOWN", "HUD_FRONTEND_DEFAULT_SOUNDSET", 0);
+	AUDIO::PLAY_SOUND_FRONTEND(-1, "NAV_UP_DOWN", "HUD_FRONTEND_DEFAULT_SOUNDSET", 0);
+	
+}
 
 void Autopilot::moveToDest(){
 	bool arrived = false;
 
-	tNode myLoc = GPS::getLocationNode(vehicle);
-	tNode dest = GPS::getDestinationNode();
+	tNode myLoc = nav.getLocationNode(vehicle);
+	tNode dest;
+	if (!nav.getDestinationNode(dest)) {
+		return;
+	}
 
-	std::vector<GPS::tNode*> path = GPS::findPath(myLoc, dest);
+	std::vector<tNode*> path = nav.findPath(myLoc, dest);
 
 	int i = 0;
 
 	while (!arrived){
 
-		GPS::tNode* nextNode = path[i];
+		tNode* nextNode = path[i];
 
-		GPS::Vector3 nodeLoc = nextNode.coord;
-		GPS::Vector3 myLoc = getCurrentLoc();
+		Vector3 nodeLoc = nextNode->coord;
+		Vector3 myLoc = getCurrentLoc();
 
-		if (GPS::dist(myLoc.x, myLoc.y, 0, nodeLoc.x, nodeLoc.y, 0) < 0.5){
+		if (dist(myLoc.x, myLoc.y, 0, nodeLoc.x, nodeLoc.y, 0) < 0.5){
 			i++;
 			nextNode = path[i];
-			nodeLoc = nextNode.coord;
+			nodeLoc = nextNode->coord;
 			if (i == path.size()){
 				arrived = true;
 				break;
@@ -59,12 +75,17 @@ void Autopilot::moveToDest(){
 
 }
 
+Vector3 Autopilot::getCurrentLoc()
+{
+	return ENTITY::GET_ENTITY_COORDS(vehicle, FALSE);
+}
+
 void Autopilot::initVehicle() {
 	Vector3 pos, rotation;
 	Hash vehicleHash;
 	float heading;
 
-	GAMEPLAY::SET_RANDOM_SEED(std::time(NULL));
+	GAMEPLAY::SET_RANDOM_SEED(time(NULL));
 	while (!PATHFIND::_0xF7B79A50B905A30D(-8192.0f, 8192.0f, -8192.0f, 8192.0f)) WAIT(0);
 	PATHFIND::GET_CLOSEST_VEHICLE_NODE_WITH_HEADING(x, y, 0, &pos, &heading, 0, 0, 0);
 
@@ -89,8 +110,6 @@ void Autopilot::initVehicle() {
 
 	PED::SET_PED_INTO_VEHICLE(ped, vehicle, -1);
 	STREAMING::SET_MODEL_AS_NO_LONGER_NEEDED(vehicleHash);
-
-	TIME::SET_CLOCK_TIME(hour, minute, 0);
 
 	GAMEPLAY::SET_WEATHER_TYPE_NOW_PERSIST((char*)_weather);
 

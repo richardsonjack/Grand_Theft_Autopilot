@@ -3,6 +3,8 @@
 #include <map>
 #include <vector>
 #include <string>
+#include "..\dependencies\inc\types.h"
+#include "..\dependencies\inc\natives.h"
 
 struct tNodeAttr{
 	bool disabled; //Disabled (0)
@@ -32,13 +34,6 @@ struct tLinkAttr{
 	bool blockIfNoLanes; //Block If No Lanes (0)
 	bool shortcut; //Shortcut (0)
 	bool dontUseForNavigation; //Dont Use For Navigation (0)
-};
-
-struct Vector3 {
-	float x,y,z;
-    Vector3 operator + (const Vector3& right_);
-    bool operator == (const Vector3& coordinates_);
-    float vecDist(Vector3 goal);
 };
 
 struct tLinePoint{
@@ -79,20 +74,21 @@ struct aStarNode{
     bool operator == (const aStarNode& x);
 } ;
 
-const char* pathsfile = "./paths.xml";
+float dist(float x1, float y1, float z1, float x2, float y2, float z2);
 
 class GPS {
 private:
 	//helpers
 	void populateNodes(const char* pathsfile);
 	void setLinePoints(tNode* node, tLink link);
-	tNode getLocationNode(Vehicle vehicle);
-	tNode getDestinationNode();
-
+	const char* pathsfile = "./paths.xml";
+	
 public:
 	GPS();
 	~GPS();
 	std::map<int, tNode> nodes;
-    std::vector<tNode*> findPath(int startID, int endID);
+	tNode getLocationNode(Vehicle vehicle);
+	bool getDestinationNode(tNode & myNode);
+	std::vector<tNode*> findPath(int startID, int endID);
     std::vector<tNode*> findPath(tNode startNode, tNode endNode);
 };

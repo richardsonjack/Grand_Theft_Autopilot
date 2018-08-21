@@ -13,33 +13,18 @@ float dist(float x1, float y1, float z1, float x2, float y2, float z2) {
 }
 
 
-bool Vector3::operator == (const Vector3& coordinates_)
+float vecDist(Vector3 src, Vector3 goal)
 {
-    return (x == coordinates_.x && y == coordinates_.y);
-}
-
-bool aStarNode::operator == (const aStarNode& x)
-{
-    return (node->coord == x.node->coord);
-}
-
-Vector3 Vector3::operator + (const Vector3& right_)
-{
-    return{ x + right_.x, y + right_.y,z + right_.z};
-}
-
-float Vector3::vecDist(Vector3 goal)
-{
-    return abs(dist(x, y, z, goal.x, goal.y, goal.z));
+    return abs(dist(src.x, src.y, src.z, goal.x, goal.y, goal.z));
 }
 
 void aStarNode::calcParams(aStarNode* goal)
 {
-    cost = 0 ;
-    if (parent != NULL) {
-        cost += parent->cost + this->node->coord.vecDist(parent->node->coord);
-    }
-    estimate = this->node->coord.vecDist(goal->node->coord);
+	cost = 0;
+	if (parent != NULL) {
+		cost += parent->cost + vecDist(this->node->coord, parent->node->coord);
+	}
+	estimate = vecDist(this->node->coord, parent->node->coord);
 }
 
 GPS::GPS() {
@@ -300,7 +285,7 @@ void GPS::setLinePoints(tNode* node, tLink link){
 	node->links.push_back(link);
 }
 
-tNode GPS::getLocationNode(){
+tNode GPS::getLocationNode(Vehicle vehicle){
 	Vector3 currentPosition = ENTITY::GET_ENTITY_COORDS(vehicle, FALSE);
 
 	tNode myNode;
@@ -310,19 +295,19 @@ tNode GPS::getLocationNode(){
 
 
 	for (int i = 1; i <= 3; i++) {
-		nodeID = PATHFIND::GET_NTH_CLOSEST_VEHICLE_NODE_ID(currentPosition.x, currentPosition.y, currentPosition.z, i, 1, 300, 300);
-		linkedNode = nodes[nodeID];
+		int nodeID = PATHFIND::GET_NTH_CLOSEST_VEHICLE_NODE_ID(currentPosition.x, currentPosition.y, currentPosition.z, i, 1, 300, 300);
+		tNode linkedNode = nodes[nodeID];
 		
 		tLink link;
 		link.attr.lanesIn = 1;
 		link.attr.lanesOut = 1;
 
-		float dist = GAMEPLAY::GET_DISTANCE_BETWEEN_COORDS(node1.coord.x, node1.coord.y, 0, node2.coord.x, node2.coord.y, 0, FALSE);
-		link.direction.x = (linkedNode.coord.x - myNode.coord.x) / m; //Unitary vector pointing in the direction of the road
-		link.direction.y = (linkedNode.coord.y - myNode.coord.y) / m;
+		float dist = GAMEPLAY::GET_DISTANCE_BETWEEN_COORDS(myNode.coord.x, myNode.coord.y, 0, linkedNode.coord.x, linkedNode.coord.y, 0, FALSE);
+		link.direction.x = (linkedNode.coord.x - myNode.coord.x) / dist; //Unitary vector pointing in the direction of the road
+		link.direction.y = (linkedNode.coord.y - myNode.coord.y) / dist;
 
 		link.firstNodeID = myNode.id;
-        link.secondNodeID = node.id;
+        link.secondNodeID = linkedNode.id;
 
         myNode.links.push_back(link);
 
@@ -330,7 +315,7 @@ tNode GPS::getLocationNode(){
 	return myNode;
 }
 
-Vector3 getCoordsFromMarker()
+ bool getCoordsFromMarker(Vector3 &v)
 {
 	// search for marker blip
 	int blipIterator = UI::_GET_BLIP_INFO_ID_ITERATOR();
@@ -338,49 +323,56 @@ Vector3 getCoordsFromMarker()
 	{
 		if (UI::GET_BLIP_INFO_ID_TYPE(i) == 4) // number 4 is the ID of marker on the built-in map
 		{
-			return UI::GET_BLIP_INFO_ID_COORD(i);
+			v = UI::GET_BLIP_INFO_ID_COORD(i);
+			return true;
 		}
 	}
 
-	return NULL;
+	return false;
 }
 
-tNode GPS::getDestinationNode(){
-	Vector3 dest = getCoordsFromMarker();
+ bool GPS::getDestinationNode(tNode  &myNode){
+	 Vector3 dest;
 
-	if (dest == NULL){
-		return NULL;
+	
+
+	if (!getCoordsFromMarker(dest))
+	{
+		return false;
 	}
 
-	tNode myNode;
 
 	myNode.id = -1;
-	myNode.coord = destc;
+	myNode.coord = dest;
 
 
 	for (int i = 1; i <= 3; i++) {
-		nodeID = PATHFIND::GET_NTH_CLOSEST_VEHICLE_NODE_ID(dest.x, dest.y, dest.z, i, 1, 300, 300);
-		linkedNode = nodes[nodeID];
-		
+		int nodeID = PATHFIND::GET_NTH_CLOSEST_VEHICLE_NODE_ID(dest.x, dest.y, dest.z, i, 1, 300, 300);
+		tNode linkedNode = nodes[nodeID];
+
 		tLink link;
 		link.attr.lanesIn = 1;
 		link.attr.lanesOut = 1;
 
-		float dist = GAMEPLAY::GET_DISTANCE_BETWEEN_COORDS(node1.coord.x, node1.coord.y, 0, node2.coord.x, node2.coord.y, 0, FALSE);
-		link.direction.x = (linkedNode.coord.x - myNode.coord.x) / m; //Unitary vector pointing in the direction of the road
-		link.direction.y = (linkedNode.coord.y - myNode.coord.y) / m;
+		float dist = GAMEPLAY::GET_DISTANCE_BETWEEN_COORDS(myNode.coord.x, myNode.coord.y, 0, linkedNode.coord.x, linkedNode.coord.y, 0, FALSE);
+		link.direction.x = (linkedNode.coord.x - myNode.coord.x) / dist; //Unitary vector pointing in the direction of the road
+		link.direction.y = (linkedNode.coord.y - myNode.coord.y) / dist;
 
 		link.firstNodeID = myNode.id;
-        link.secondNodeID = node.id;
+		link.secondNodeID = linkedNode.id;
 
-        myNode.links.push_back(link);
+		myNode.links.push_back(link);
 
 	}
-	return myNode;
+	return true;
 }
 
 bool fComp(aStarNode *x, aStarNode *y){
     return x->cost+ x->estimate < y->cost + y->estimate;
+}
+
+bool sameCoord(Vector3 l, Vector3 r) {
+	return (r.x == l.x) && (r.y == l.y) && (r.z == l.z);
 }
 
 std::vector<tNode*> GPS::findPath(int startID, int endID){
@@ -419,7 +411,7 @@ std::vector<tNode*> GPS::findPath(int startID, int endID){
         openList.remove(curNode);
         
         //check if this is the goal
-        if (curNode->node->coord == goal_node->node->coord) {
+        if (sameCoord(curNode->node->coord,goal_node->node->coord)) {
             goalFound = true;
             break;
         }
@@ -469,7 +461,7 @@ std::vector<tNode*> GPS::findPath(int startID, int endID){
     aStarNode* inClosed = *std::find(closedList.begin(), closedList.end(), goal_node);
     
     if (inClosed != *closedList.end()) {
-        while (!(inClosed->node->coord == start_node->node->coord)) {
+        while (!sameCoord(inClosed->node->coord, start_node->node->coord)) {
             path.insert(path.begin(), inClosed->node);
             inClosed = inClosed->parent;
         }
@@ -490,8 +482,8 @@ std::vector<tNode*> GPS::findPath(tNode startNode, tNode endNode){
     aStarNode* start_node = new aStarNode{&startNode,std::numeric_limits<double>::infinity(),0,NULL};
     aStarNode* goal_node = new aStarNode{&endNode,std::numeric_limits<double>::infinity(),0,NULL};
     
-    aStarNodeMap[startID] = start_node;
-    aStarNodeMap[endID] = goal_node;
+    aStarNodeMap[startNode.id] = start_node;
+    aStarNodeMap[endNode.id] = goal_node;
     
     std::cout << start_node->node->coord.x << " " << start_node->node->coord.y << " " << start_node->node->coord.x << std::endl;
     std::cout << goal_node->node->coord.x << " " << goal_node->node->coord.y << " " << goal_node->node->coord.x << std::endl;
@@ -514,63 +506,64 @@ std::vector<tNode*> GPS::findPath(tNode startNode, tNode endNode){
         closedList.push_back(curNode);
         openList.remove(curNode);
         
-        //check if this is the goal
-        if (curNode->node->coord == goal_node->node->coord) {
-            goalFound = true;
-            break;
-        }
-        
-        //generate all moves
-        std::vector<tNode*> linkedNodes = curNode->node->getLinkedNodes(&nodes);
-        for(int i = 0; i < linkedNodes.size(); i++) {
-            aStarNode* nextMove;
-            if (aStarNodeMap[linkedNodes[i]->id] == NULL){
-               nextMove = new aStarNode{linkedNodes[i],std::numeric_limits<double>::infinity(),0,NULL};
-                aStarNodeMap[linkedNodes[i]->id] = nextMove;
-            }else {
-                nextMove = aStarNodeMap[linkedNodes[i]->id];
-            }
-            
-            
-            //check move validity
-            if (std::find(closedList.begin(), closedList.end(), nextMove) != closedList.end()) {
-                //std::cout << "REPEAT\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
-                continue;
-            }
-            
-            nextMove->calcParams(goal_node);
-            
-            //check if location is on open list and update f value and parent value accordingly
-            aStarNode* openListElem = *std::find(openList.begin(), openList.end(), nextMove);
-            //not in open list
-            
-            if(openListElem == *openList.end()){
-                nextMove->parent = curNode;
-                nextMove->calcParams(goal_node);
-                openList.push_back(nextMove);
-            }
-            //in open list and more efficient
-            else if(nextMove->cost < openListElem->cost){
-                nextMove->parent = curNode;
-            }
-        }
-        
-    }
-    
-    if(!goalFound) {
-        std::cout << "No Valid Path\n";
-        exit(1);
-    }
-    
-    aStarNode* inClosed = *std::find(closedList.begin(), closedList.end(), goal_node);
-    
-    if (inClosed != *closedList.end()) {
-        while (!(inClosed->node->coord == start_node->node->coord)) {
-            path.insert(path.begin(), inClosed->node);
-            inClosed = inClosed->parent;
-        }
-    }
-    
+		//check if this is the goal
+		if (sameCoord(curNode->node->coord, goal_node->node->coord)) {
+			goalFound = true;
+			break;
+		}
+
+		//generate all moves
+		std::vector<tNode*> linkedNodes = curNode->node->getLinkedNodes(&nodes);
+		for (int i = 0; i < linkedNodes.size(); i++) {
+			aStarNode* nextMove;
+			if (aStarNodeMap[linkedNodes[i]->id] == NULL) {
+				nextMove = new aStarNode{ linkedNodes[i],std::numeric_limits<double>::infinity(),0,NULL };
+				aStarNodeMap[linkedNodes[i]->id] = nextMove;
+			}
+			else {
+				nextMove = aStarNodeMap[linkedNodes[i]->id];
+			}
+
+
+			//check move validity
+			if (std::find(closedList.begin(), closedList.end(), nextMove) != closedList.end()) {
+				//std::cout << "REPEAT\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
+				continue;
+			}
+
+			nextMove->calcParams(goal_node);
+
+			//check if location is on open list and update f value and parent value accordingly
+			aStarNode* openListElem = *std::find(openList.begin(), openList.end(), nextMove);
+			//not in open list
+
+			if (openListElem == *openList.end()) {
+				nextMove->parent = curNode;
+				nextMove->calcParams(goal_node);
+				openList.push_back(nextMove);
+			}
+			//in open list and more efficient
+			else if (nextMove->cost < openListElem->cost) {
+				nextMove->parent = curNode;
+			}
+		}
+
+	}
+
+	if (!goalFound) {
+		std::cout << "No Valid Path\n";
+		exit(1);
+	}
+
+	aStarNode* inClosed = *std::find(closedList.begin(), closedList.end(), goal_node);
+
+	if (inClosed != *closedList.end()) {
+		while (!sameCoord(inClosed->node->coord, start_node->node->coord)) {
+			path.insert(path.begin(), inClosed->node);
+			inClosed = inClosed->parent;
+		}
+	}
+
     
     return path;
 }

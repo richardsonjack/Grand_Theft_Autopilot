@@ -1,6 +1,6 @@
 #pragma once
 
-#include "./GPS/GPS.h"
+#include "../GPS/GPS.h"
 class Autopilot {
 private:
 	GPS nav;
@@ -10,9 +10,14 @@ private:
 	Cam camera = NULL;
 	Vector3 dir;
 
+	float x, y;\
+	int hour, minute;
+	const char* _vehicle = "blista";
+	const char* _weather = "CLEAR";
 
 public:
-	void moveToNode(GPS::tNode node);
+	Autopilot();
+	void moveToDest();
 
 	Vector3 getCurrentLoc();
 

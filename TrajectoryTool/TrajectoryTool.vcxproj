@@ -16,6 +16,7 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>TrajectoryTool</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <ProjectName>Autopilot</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -96,13 +97,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="..\Autopilot\dllmain.cpp" />
+    <ClCompile Include="..\Autopilot\script.cpp" />
+    <ClCompile Include="..\GPS\GPS.cpp" />
+    <ClCompile Include="..\GPS\tinyxml2.cpp" />
+    <ClCompile Include="..\Vehicle\Autopilot.cpp" />
     <ClCompile Include="keyboard.cpp" />
-    <ClCompile Include="script.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Autopilot\script.h" />
+    <ClInclude Include="..\GPS\GPS.h" />
+    <ClInclude Include="..\GPS\tinyxml2.h" />
+    <ClInclude Include="..\Vehicle\Autopilot.h" />
     <ClInclude Include="keyboard.h" />
-    <ClInclude Include="script.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="..\GPS\paths.xml" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

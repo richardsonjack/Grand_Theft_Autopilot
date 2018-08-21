@@ -4,7 +4,7 @@
 
 #include "script.h"
 #include "keyboard.h"
-#include "../Vehicle/Vehicle.h"
+#include "../Vehicle/Autopilot.h"
 
 /*********************************************************************/
 /******************************** VARIABLES **************************/
@@ -25,8 +25,6 @@ int _traj_idx = 0; // trajectory index used while executing trajectory
 Cam _camera; // Our owned camera used for executing dense trajectory and collecting image data
 int _order_rot = 2; // rotation order
 
-GDIScreenCaptureWorker _screen_capture_worker; // variable for screen capture
-
 
 /****************************************************************************************/
 /******************************** IMPLEMENTATIONS OF FUNCTIONS **************************/
@@ -36,6 +34,47 @@ GDIScreenCaptureWorker _screen_capture_worker; // variable for screen capture
 void drawRect(float A_0, float A_1, float A_2, float A_3, int A_4, int A_5, int A_6, int A_7)
 {
 	GRAPHICS::DRAW_RECT((A_0 + (A_2 * 0.5f)), (A_1 + (A_3 * 0.5f)), A_2, A_3, A_4, A_5, A_6, A_7);
+}
+
+
+void updateNotificationText()
+{
+	if (GetTickCount() < _notification_text_draw_ticks_max)
+	{
+		UI::SET_TEXT_FONT(0);
+		UI::SET_TEXT_SCALE(0.55, 0.55);
+		UI::SET_TEXT_COLOUR(255, 255, 255, 255);
+		UI::SET_TEXT_WRAP(0.0, 1.0);
+		UI::SET_TEXT_CENTRE(1);
+		UI::SET_TEXT_DROPSHADOW(0, 0, 0, 0, 0);
+		UI::SET_TEXT_EDGE(1, 0, 0, 0, 205);
+		if (_notification_text_gxt_entry)
+		{
+			UI::_SET_TEXT_ENTRY((char *)_notification_text.c_str());
+		}
+		else
+		{
+			UI::_SET_TEXT_ENTRY("STRING");
+			UI::_ADD_TEXT_COMPONENT_STRING((char *)_notification_text.c_str());
+		}
+		UI::_DRAW_TEXT(0.5, 0.5);
+	}
+}
+
+
+int updateFeatures()
+{
+	updateNotificationText();
+	PED::SET_PED_DENSITY_MULTIPLIER_THIS_FRAME(0);
+	VEHICLE::SET_VEHICLE_DENSITY_MULTIPLIER_THIS_FRAME(0);
+	return 0;
+}
+
+void setNotificationText(std::string str, DWORD time = 3500, bool isGxtEntry = false)
+{
+	_notification_text = str;
+	_notification_text_draw_ticks_max = GetTickCount() + time;
+	_notification_text_gxt_entry = isGxtEntry;
 }
 
 void drawMenuLine(std::string caption, float line_width, float line_height, float line_top,
@@ -136,6 +175,7 @@ void handleMainMenu()
 	
 	while (true)
 	{
+		updateFeatures();
 		// timed menu draw, used for pause after active line switch
 		DWORD max_tick_count = GetTickCount() + wait_time;
 		do
@@ -147,6 +187,7 @@ void handleMainMenu()
 					drawMenuLine(menu_list[i], _MENU_LINE_WIDTH, 9.0, 60.0 + i * 36.0, 0.0, 9.0, false, false);
 			drawMenuLine(menu_list[_current_main_menu_index],
 				_MENU_LINE_WIDTH + 1.0, 11.0, 56.0 + _current_main_menu_index * 36.0, 0.0, 7.0, true, false);
+			updateFeatures();
 			WAIT(0);
 		} while (GetTickCount() < max_tick_count);
 
@@ -158,11 +199,21 @@ void handleMainMenu()
 
 		if (button_select) // if users select one item within menu, check what the item is
 		{
+			Autopilot a = Autopilot();
+			AUDIO::PLAY_SOUND_FRONTEND(-1, "NAV_UP_DOWN", "HUD_FRONTEND_DEFAULT_SOUNDSET", 0);
 			switch (_current_main_menu_index)
 			{
-			case 0:
-				//do the path finding
 
+			case 0:
+				
+				a.initVehicle();
+				a.moveToDest();
+
+				break;
+
+			default:
+				AUDIO::PLAY_SOUND_FRONTEND(-1, "NAV_UP_DOWN", "HUD_FRONTEND_DEFAULT_SOUNDSET", 0);
+				AUDIO::PLAY_SOUND_FRONTEND(-1, "NAV_UP_DOWN", "HUD_FRONTEND_DEFAULT_SOUNDSET", 0);
 				break;
 			}
 			wait_time = 200;
@@ -196,59 +247,27 @@ void handleMainMenu()
 	}
 }
 
-void updateNotificationText()
+
+
+
+void main()
 {
-	if (GetTickCount() < _notification_text_draw_ticks_max)
-	{
-		UI::SET_TEXT_FONT(0);
-		UI::SET_TEXT_SCALE(0.55, 0.55);
-		UI::SET_TEXT_COLOUR(255, 255, 255, 255);
-		UI::SET_TEXT_WRAP(0.0, 1.0);
-		UI::SET_TEXT_CENTRE(1);
-		UI::SET_TEXT_DROPSHADOW(0, 0, 0, 0, 0);
-		UI::SET_TEXT_EDGE(1, 0, 0, 0, 205);
-		if (_notification_text_gxt_entry)
-		{
-			UI::_SET_TEXT_ENTRY((char *)_notification_text.c_str());
-		}
-		else
-		{
-			UI::_SET_TEXT_ENTRY("STRING");
-			UI::_ADD_TEXT_COMPONENT_STRING((char *)_notification_text.c_str());
-		}
-		UI::_DRAW_TEXT(0.5, 0.5);
-	}
-}
-
-
-bool getCoordsFromMarker(Vector3 &coords)
-{
-	Entity e = PLAYER::PLAYER_PED_ID();
-	bool success = false;
-	bool blipFound = false;
-
-	// search for marker blip
-	int blipIterator = UI::_GET_BLIP_INFO_ID_ITERATOR();
-	for (Blip i = UI::GET_FIRST_BLIP_INFO_ID(blipIterator); UI::DOES_BLIP_EXIST(i) != 0; i = UI::GET_NEXT_BLIP_INFO_ID(blipIterator))
-	{
-		if (UI::GET_BLIP_INFO_ID_TYPE(i) == 4) // number 4 is the ID of marker on the built-in map
-		{
-			coords = UI::GET_BLIP_INFO_ID_COORD(i);
-			success = true;;
-			break;
-		}
-	}
-
-	return success;
-}
-
-void ScriptMain()
-{
+	setNotificationText("Starting AutoPilot Mod");
+	WAIT(3500);
 	while (true)
 	{
 		if (switchPressed())
 		{
 			handleMainMenu();
-		}
+		}	
+		WAIT(0);
+		updateFeatures();
+
 	}
+}
+
+void ScriptMain()
+{
+	srand(GetTickCount());
+	main();
 }
