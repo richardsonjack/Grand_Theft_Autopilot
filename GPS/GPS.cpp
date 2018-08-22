@@ -70,7 +70,9 @@ void GPS::populateNodes(const char* pathsfile){
 	tinyxml2::XMLElement* ref1;
 	tinyxml2::XMLElement* ref2;
 
-	doc.LoadFile(pathsfile);
+	if (doc.LoadFile(pathsfile) != 0){
+		return;
+	}
 
 	object = doc.FirstChildElement()->FirstChildElement()->FirstChildElement();
 	
@@ -342,7 +344,7 @@ tNode GPS::getLocationNode(Vehicle vehicle){
 	}
 
 
-	myNode.id = -1;
+	myNode.id = -2;
 	myNode.coord = dest;
 
 

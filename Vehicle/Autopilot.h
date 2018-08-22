@@ -10,10 +10,8 @@ private:
 	Cam camera = NULL;
 	Vector3 dir;
 
-	float x, y;\
-	int hour, minute;
+	float x, y;
 	const char* _vehicle = "blista";
-	const char* _weather = "CLEAR";
 
 public:
 	Autopilot();

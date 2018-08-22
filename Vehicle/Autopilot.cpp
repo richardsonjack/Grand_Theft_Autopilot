@@ -72,6 +72,8 @@ void Autopilot::moveToDest(){
 		setAcceleration(0.1);
 
 	}
+	setSteering(0);
+	setAcceleration(0);
 
 }
 
@@ -110,8 +112,6 @@ void Autopilot::initVehicle() {
 
 	PED::SET_PED_INTO_VEHICLE(ped, vehicle, -1);
 	STREAMING::SET_MODEL_AS_NO_LONGER_NEEDED(vehicleHash);
-
-	GAMEPLAY::SET_WEATHER_TYPE_NOW_PERSIST((char*)_weather);
 
 	rotation = ENTITY::GET_ENTITY_ROTATION(vehicle, 1);
 	CAM::DESTROY_ALL_CAMS(TRUE);
