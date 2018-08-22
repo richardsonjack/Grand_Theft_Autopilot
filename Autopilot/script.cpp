@@ -5,6 +5,8 @@
 #include "script.h"
 #include "keyboard.h"
 #include "../Vehicle/Autopilot.h"
+#include <iostream>
+
 
 /*********************************************************************/
 /******************************** VARIABLES **************************/
@@ -25,17 +27,23 @@ int _traj_idx = 0; // trajectory index used while executing trajectory
 Cam _camera; // Our owned camera used for executing dense trajectory and collecting image data
 int _order_rot = 2; // rotation order
 
+std::ofstream logfile;
 
 /****************************************************************************************/
 /******************************** IMPLEMENTATIONS OF FUNCTIONS **************************/
 /****************************************************************************************/
 
+void logger(std::string s) {
+	std::ofstream logfile;
+	logfile.open("autopilot.log", std::ios_base::trunc);
+	logfile << s << "\n";
+	logfile.close();
+}
 
 void drawRect(float A_0, float A_1, float A_2, float A_3, int A_4, int A_5, int A_6, int A_7)
 {
 	GRAPHICS::DRAW_RECT((A_0 + (A_2 * 0.5f)), (A_1 + (A_3 * 0.5f)), A_2, A_3, A_4, A_5, A_6, A_7);
 }
-
 
 void updateNotificationText()
 {
@@ -199,16 +207,23 @@ void handleMainMenu()
 
 		if (button_select) // if users select one item within menu, check what the item is
 		{
-			Autopilot a = Autopilot();
 			AUDIO::PLAY_SOUND_FRONTEND(-1, "NAV_UP_DOWN", "HUD_FRONTEND_DEFAULT_SOUNDSET", 0);
+			logger("about to declare a");
+			Autopilot a = Autopilot(); \
+			logger("a declared");
 			switch (_current_main_menu_index)
 			{
 
 			case 0:
 				
 				a.initVehicle();
-				a.moveToDest();
+				//a.moveToDest();
+				AUDIO::PLAY_SOUND_FRONTEND(-1, "NAV_UP_DOWN", "HUD_FRONTEND_DEFAULT_SOUNDSET", 0);
+				for (int i = 0; i < 30; i++)
+				{
+					CONTROLS::_SET_CONTROL_NORMAL(27, 71, 1);
 
+				}
 				break;
 
 			default:
@@ -268,6 +283,7 @@ void main()
 
 void ScriptMain()
 {
+	logger("Im Starting");
 	srand(GetTickCount());
 	main();
 }

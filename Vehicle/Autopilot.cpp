@@ -15,13 +15,10 @@ void Autopilot::setBrake(float ammt){
 
 Autopilot::Autopilot()
 {
-	AUDIO::PLAY_SOUND_FRONTEND(-1, "NAV_UP_DOWN", "HUD_FRONTEND_DEFAULT_SOUNDSET", 0);
-	AUDIO::PLAY_SOUND_FRONTEND(-1, "NAV_UP_DOWN", "HUD_FRONTEND_DEFAULT_SOUNDSET", 0);
-	AUDIO::PLAY_SOUND_FRONTEND(-1, "NAV_UP_DOWN", "HUD_FRONTEND_DEFAULT_SOUNDSET", 0);
+	alogger("about to make gps");
 	nav = GPS();
-	AUDIO::PLAY_SOUND_FRONTEND(-1, "NAV_UP_DOWN", "HUD_FRONTEND_DEFAULT_SOUNDSET", 0);
-	AUDIO::PLAY_SOUND_FRONTEND(-1, "NAV_UP_DOWN", "HUD_FRONTEND_DEFAULT_SOUNDSET", 0);
-	AUDIO::PLAY_SOUND_FRONTEND(-1, "NAV_UP_DOWN", "HUD_FRONTEND_DEFAULT_SOUNDSET", 0);
+	alogger("made gps");
+	
 	
 }
 
@@ -114,7 +111,7 @@ void Autopilot::initVehicle() {
 	STREAMING::SET_MODEL_AS_NO_LONGER_NEEDED(vehicleHash);
 
 	rotation = ENTITY::GET_ENTITY_ROTATION(vehicle, 1);
-	CAM::DESTROY_ALL_CAMS(TRUE);
+	/*CAM::DESTROY_ALL_CAMS(TRUE);
 	camera = CAM::CREATE_CAM("DEFAULT_SCRIPTED_CAMERA", TRUE);
 	if (strcmp(_vehicle, "packer") == 0) CAM::ATTACH_CAM_TO_ENTITY(camera, vehicle, 0, 2.35, 1.7, TRUE);
 	else CAM::ATTACH_CAM_TO_ENTITY(camera, vehicle, 0, 0.5, 0.8, TRUE);
@@ -122,7 +119,8 @@ void Autopilot::initVehicle() {
 	CAM::SET_CAM_ACTIVE(camera, TRUE);
 	CAM::SET_CAM_ROT(camera, rotation.x, rotation.y, rotation.z, 1);
 	CAM::SET_CAM_INHERIT_ROLL_VEHICLE(camera, TRUE);
-	CAM::RENDER_SCRIPT_CAMS(TRUE, FALSE, 0, TRUE, TRUE);
+	CAM::RENDER_SCRIPT_CAMS(TRUE, FALSE, 0, TRUE, TRUE);*/
 
 	AI::CLEAR_PED_TASKS(ped);
+	WAIT(10000);
 }

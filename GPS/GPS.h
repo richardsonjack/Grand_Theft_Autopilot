@@ -3,6 +3,8 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <fstream>
+
 #include "..\dependencies\inc\types.h"
 #include "..\dependencies\inc\natives.h"
 
@@ -81,7 +83,7 @@ private:
 	//helpers
 	void populateNodes(const char* pathsfile);
 	void setLinePoints(tNode* node, tLink link);
-	const char* pathsfile = "./paths.xml";
+	const char* pathsfile = "paths.xml";
 	
 public:
 	GPS();
@@ -91,4 +93,18 @@ public:
 	bool getDestinationNode(tNode & myNode);
 	std::vector<tNode*> findPath(int startID, int endID);
     std::vector<tNode*> findPath(tNode startNode, tNode endNode);
+
+	void glogger(std::string s) {
+		std::ofstream logfile;
+		logfile.open("autopilot.log", std::ios_base::app);
+		logfile << s << "\n";
+		logfile.close();
+	}
+
+	void glogger(int s) {
+		std::ofstream logfile;
+		logfile.open("autopilot.log", std::ios_base::app);
+		logfile << s << "\n";
+		logfile.close();
+	}
 };

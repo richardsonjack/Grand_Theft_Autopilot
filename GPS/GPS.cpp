@@ -6,7 +6,7 @@
 #include "GPS.h"
 #include "tinyxml2.h"
 #include <limits>
-
+#include <string>
 
 float dist(float x1, float y1, float z1, float x2, float y2, float z2) {
     return sqrt(pow(x2-x1, 2)+pow(y2-y1, 2)+0*pow(z2-z1, 2));
@@ -28,12 +28,15 @@ void aStarNode::calcParams(aStarNode* goal)
 }
 
 GPS::GPS() {
-	while (nodes.size() == 0) {
-		if (PATHFIND::_0xF7B79A50B905A30D(-8192.0f, 8192.0f, -8192.0f, 8192.0f)) {
-			populateNodes(pathsfile);
-		}
-		WAIT(0);
-	}
+	glogger("about to node populate");
+	//while (nodes.size() == 0) {
+	//	glogger("in the while");
+	//	if (PATHFIND::_0xF7B79A50B905A30D(-8192.0f, 8192.0f, -8192.0f, 8192.0f)) {
+	//		glogger("if was okay");
+	//		populateNodes(pathsfile);
+	//	}
+	//	WAIT(0);
+	//}
 }
 
 GPS::~GPS(){
@@ -56,12 +59,14 @@ std::vector<tNode*> tNode::getLinkedNodes(std::map<int, tNode>* nodes){
 
 //helpers
 void GPS::populateNodes(const char* pathsfile){
+	glogger("node populating");
 	int ii = 0;
 	std::map<std::string, tNode> tmpnodes;
 
 	tLink *tmplinks = (tLink*)malloc(80592 * sizeof(*tmplinks)); //Too large for the stack, need to store in the heap
 
 	int i = 0;
+	int counter = 0;
 
 	tinyxml2::XMLDocument doc;
 	tinyxml2::XMLElement* object;
@@ -70,13 +75,17 @@ void GPS::populateNodes(const char* pathsfile){
 	tinyxml2::XMLElement* ref1;
 	tinyxml2::XMLElement* ref2;
 
+	glogger("about to read file");
 	if (doc.LoadFile(pathsfile) != 0){
 		return;
 	}
+	glogger("read file");
 
 	object = doc.FirstChildElement()->FirstChildElement()->FirstChildElement();
 	
 	for (object; object; object = object->NextSiblingElement()) {
+		
+		glogger(counter++);
 		if (object->Attribute("class", "vehiclenode")) {
 			tNode node = { 0 };
 			node.attr.speed = 4;
@@ -193,7 +202,7 @@ void GPS::populateNodes(const char* pathsfile){
 			i++;
 		}
 	}
-
+	glogger("put things in place");
 	//Puts everything into place for fast searching by nodeID
 	tNode node1;
 	tNode node2;
