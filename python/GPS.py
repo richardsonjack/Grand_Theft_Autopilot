@@ -1,5 +1,6 @@
 import xml.etree.ElementTree as ET
 from scipy import spatial
+import numpy as np
 from scipy.spatial import distance
 import pathfind
 
@@ -80,7 +81,7 @@ class GPS:
         return spatial.distance.euclidean(current, next)
 
     def genPath(self, start, end):
-        came_from, cost = pathfind.a_star_search(g, start, end)
+        came_from, cost = pathfind.a_star_search(self, start, end)
         self.path = pathfind.reconstruct_path(came_from, start, end)
 
 
@@ -197,5 +198,6 @@ class GPS:
 
             self.nodeMap[n1.coords] = n1
             self.nodeMap[n2.coords] = n2
-
-        self.nodeTree = spatial.KDTree(self.nodeMap.keys())
+        print(";")
+        print(";")
+        self.nodeTree = spatial.KDTree(list(self.nodeMap.keys()))

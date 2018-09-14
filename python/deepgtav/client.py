@@ -17,6 +17,7 @@ class Targets:
         try:
             dct = json.loads(jsonstr)
         except ValueError:
+            print(jsonstr)
             return None
         
         dct['frame'] = frame
@@ -25,7 +26,7 @@ class Targets:
         return dct
 
 class Client:
-    def __init__(self, ip='localhost', port=8000, datasetPath=None, compressionLevel=0):
+    def __init__(self, ip='127.0.0.1', port=8000, datasetPath=None, compressionLevel=0):
         print('Trying to connect to DeepGTAV')
         
         self.targets = Targets(datasetPath, compressionLevel)
@@ -33,8 +34,9 @@ class Client:
         try:
             self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.s.connect((ip, int(port)))
-        except:
+        except Exception as e:
             print('ERROR: Failed to connect to DeepGTAV')
+            print(e)
         else:
             print('Successfully connected to DeepGTAV')
 
