@@ -5,13 +5,14 @@ import json
 import socket, struct
 import pickle
 import gzip
+import base64
 
 class Targets:
     def __init__(self, datasetPath, compressionLevel):
         self.pickleFile = None
         
         if datasetPath != None:
-            self.pickleFile = gzip.open(datasetPath, mode='ab', compresslevel=compressionLevel)
+            self.pickleFile  = open(datasetPath,"w")
 
     def parse(self, frame, jsonstr):
         try:
@@ -20,9 +21,10 @@ class Targets:
             print(jsonstr)
             return None
         
-        dct['frame'] = frame
+        dct['frame'] = base64.b64encode(frame).decode("utf-8")
         if self.pickleFile != None:
-            pickle.dump(dct, self.pickleFile)
+            str = json.dumps(dct)
+            self.pickleFile.write(str)
         return dct
 
 class Client:

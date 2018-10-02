@@ -11,7 +11,7 @@ import cv2
 import GPS
 import random
 import math
-from getkeys import key_check
+#from getkeys import key_check
 
 class Model:
     lastCmd = [0,0,0]
@@ -246,9 +246,9 @@ if __name__ == '__main__':
     while time.time() < stoptime:
         try:
             
-            if 'Y' in key_check():
-                client.sendMessage(Stop())
-                client.sendMessage(Start(dataset=dataset,scenario=scenario))
+            # if 'Y' in key_check():
+            #     client.sendMessage(Stop())
+            #     client.sendMessage(Start(dataset=dataset,scenario=scenario))
             # We receive a message as a Python dictionary
             message = client.recvMessage()
             # The frame is a numpy array that can we pass through a CNN for example     
